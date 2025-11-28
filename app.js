@@ -6,7 +6,7 @@ const User = require('./models/User');
 const Food = require('./models/Food');
 
 const app = express();
-
+require('dotenv').config();
 // ---Configuration ---
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -17,7 +17,7 @@ app.use(session({ secret: 'secret-key', resave: false, saveUninitialized: true }
 // MongoDB
 // --- 2. database connection ---
 // MongoDB Atlas (Cloud)
-const dbURI = 'mongodb+srv://jingdarrell_db_user:student123@cluster0.dwcnzaj.mongodb.net/?appName=Cluster0';
+const dbURI = process.env.MONGODB_URI;
 
 mongoose.connect(dbURI)
     .then(() => console.log('MongoDB Connected to Atlas!'))
