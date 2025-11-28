@@ -1,0 +1,224 @@
+<%- include('header') %>
+
+<% if (user.userType === 'donor') { %>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card p-3 mb-4 border-primary">
+                <h4 class="text-primary">Add Food Listing</h4>
+                <form action="/dashboard" method="GET" class="mb-4">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="Search for food (e.g. Pizza, Bread)..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
+                        <button class="btn btn-outline-primary" type="submit">Search</button>
+                        <% if (typeof searchQuery !== 'undefined' && searchQuery) { %>
+                        <a href="/dashboard" class="btn btn-outline-secondary">Clear</a>
+                        <% } %>
+                    </div>
+                </form>
+                <form action="/add-food" method="POST">
+                    <div class="mb-2">
+                        <label class="form-label">Food Name</label>
+                        <input type="text" name="name" placeholder="e.g. Pizza" class="form-control" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" placeholder="Details about the food..." class="form-control"></textarea>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Expiry Date</label>
+                        <input type="text" name="expiryDate" placeholder="YYYY-MM-DD" class="form-control">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" name="quantity" placeholder="1" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Post Listing</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <h4>My Listings</h4>
+            <% if (foods.length === 0) { %>
+                <p class="text-muted">You haven't posted anything yet.</p>
+            <% } %>
+
+            <% foods.forEach(food => { %>
+                <div class="card mb-3 shadow-sm border-<%= food.status === 'Picked Up' ? 'light' : (food.status === 'Reserved' ? 'warning' : 'primary') %>">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="card-title mb-1">
+                                    <%= food.name %> 
+                                </h5>
+                                <span class="badge bg-<%= food.status==='Available'?'success':(food.status==='Reserved'?'warning text-dark':'secondary') %>">
+                                    <%= food.status %>
+                                </span>
+                            </div>
+                            
+                            <form action="/delete-food/<%= food._id %>" method="POST" onsubmit="return confirm('Delete this listing?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">✕</button>
+                            </form>
+                        </div>
+
+                        <p class="card-text text-muted mt-2 mb-2">
+                            <%= food.description %> <br>
+                            <small>Qty: <%= food.quantity %> | Exp: <%= food.expiryDate %></small>
+                        </p>
+
+                        <% if (food.status === 'Reserved') { %>
+                            <div class="alert alert-warning p-2 mt-2">
+                                <strong>Action Required:</strong> <br>
+                                Reserved by: <strong><%= food.reservedBy ? food.reservedBy.name : 'Unknown User' %></strong>
+                                <form action="/mark-picked-up/<%= food._id %>" method="POST" class="mt-2">
+                                    <button type="submit" class="btn btn-warning w-100">Confirm Pickup (Hand Over)</button>
+                                </form>
+                            </div>
+                        <% } %>
+
+                        <% if (food.status === 'Picked Up') { %>
+                            <div class="alert alert-secondary p-1 mt-2 text-center">
+                                <small>Transaction Completed ✅</small>
+                            </div>
+                        <% } %>
+
+                        <% if (food.rating > 0) { %>
+                            <div class="alert alert-success p-2 mt-2">
+                                <small>
+                                    <strong>User Review:</strong> <%= food.rating %> ★ <br>
+                                    "<%= food.reviewComment || 'No comment' %>"
+                                </small>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+
+<% } else { %>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <form action="/dashboard" method="GET">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="🔍 Search for food (e.g. Banana)..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
+                    <button class="btn btn-primary" type="submit">Search</button>
+                    <% if (typeof searchQuery !== 'undefined' && searchQuery) { %>
+                        <a href="/dashboard" class="btn btn-outline-secondary">Clear</a>
+                    <% } %>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <% if (myReservations && myReservations.length > 0) { %>
+        <div class="card mb-4 border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">✅ My Reservations & History</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <% myReservations.forEach(food => { %>
+                        <div class="col-md-6 mb-3">
+                            <div class="alert alert-<%= food.status === 'Picked Up' ? 'secondary' : 'light' %> border shadow-sm">
+                                <div class="d-flex justify-content-between">
+                                    <strong><%= food.name %></strong>
+                                    <span class="badge bg-<%= food.status === 'Picked Up' ? 'dark' : 'success' %>">
+                                        <%= food.status %>
+                                    </span>
+                                </div>
+                                <hr class="my-1">
+                                <small class="text-muted">
+                                    📍 From: <%= food.donor ? food.donor.name : 'Unknown' %> <br>
+                                    🕒 Expiry: <%= food.expiryDate %>
+                                </small>
+
+                                <% if (food.status === 'Reserved') { %>
+                                    <div class="mt-2 text-primary">
+                                        <small>Please pick up at the location. Show Code: <strong><%= food._id.toString().slice(-4) %></strong></small>
+                                    </div>
+
+                                <% } else if (food.status === 'Picked Up' && food.rating === 0) { %>
+                                    <hr>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <label class="form-label small mb-0"><strong>Rate your experience:</strong></label>
+                                        
+                                        <form action="/skip-review/<%= food._id %>" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-link btn-sm text-muted text-decoration-none" style="font-size: 0.8rem;">Skip</button>
+                                        </form>
+                                    </div>
+
+                                    <form action="/review/<%= food._id %>" method="POST" class="mt-2">
+                                        <div class="input-group input-group-sm">
+                                            <select name="rating" class="form-select" style="max-width: 70px;" required>
+                                                <option value="5">5 ★</option>
+                                                <option value="4">4 ★</option>
+                                                <option value="3">3 ★</option>
+                                                <option value="2">2 ★</option>
+                                                <option value="1">1 ★</option>
+                                            </select>
+                                            <input type="text" name="reviewComment" class="form-control" placeholder="Comment (Optional)...">
+                                            <button class="btn btn-outline-success" type="submit">Submit</button>
+                                        </div>
+                                    </form>
+
+                                <% } else if (food.rating > 0) { %>
+                                    <div class="mt-2 text-success">
+                                        <small>
+                                            Thanks for your review! <br>
+                                            You rated: <strong><%= food.rating %> ★</strong> "<%= food.reviewComment %>"
+                                        </small>
+                                    </div>
+                                <% } %>
+
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            </div>
+        </div>
+    <% } %>
+
+    <h4 class="mb-3">Available Food Nearby</h4>
+    
+    <% if (foods.length === 0) { %>
+        <div class="alert alert-warning text-center">
+            No food matches your search right now. 
+            <br>
+            <a href="/dashboard" class="alert-link">Show All</a>
+        </div>
+    <% } %>
+
+    <div class="row">
+        <% foods.forEach(food => { %>
+            <div class="col-md-4">
+                <div class="card mb-4 shadow-sm h-100">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h5 class="card-title"><%= food.name %></h5>
+                            <span class="badge bg-info text-dark">Stock: <%= food.quantity %></span>
+                        </div>
+                        <h6 class="card-subtitle mb-2 text-muted">From: <%= food.donor ? food.donor.name : 'Unknown' %></h6>
+                        
+                        <p class="card-text flex-grow-1"><%= food.description %></p>
+                        <small class="text-muted mb-3">📅 Expires: <%= food.expiryDate %></small>
+
+                        <form action="/reserve/<%= food._id %>" method="POST" class="mt-auto">
+                            <div class="input-group">
+                                <span class="input-group-text">Qty</span>
+                                <input type="number" name="reserveQty" class="form-control" value="1" min="1" max="<%= food.quantity %>" required>
+                                <button type="submit" class="btn btn-primary">Reserve</button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+
+<% } %>
+
+</body>
+</html>
