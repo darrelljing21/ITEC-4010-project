@@ -6,6 +6,12 @@ const foodSchema = new mongoose.Schema({
     // For the convenience of demonstration, just store the string directly instead of using the Date object.
     expiryDate: String, 
     quantity: Number,
+    imageUrl: { type: String, default: '' },
+    category: { 
+        type: String, 
+        enum: ['Vegetables', 'Fruits', 'Bakery', 'Meals', 'Drinks', 'Other'], 
+        default: 'Other' 
+    },
     status: { type: String, default: 'Available' }, // Status: Available or Reserved
     donor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Associated with the publisher
     reservedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }, // Who made the reservation?
