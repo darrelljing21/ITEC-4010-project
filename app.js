@@ -281,6 +281,37 @@ app.post('/delete-reservation/:id', async (req, res) => {
     }
 });
 
+// --- New Feature: Public Donor Profile & Reviews ---
+app.get('/donor-reviews/:id', async (req, res) => {
+    //需要登录
+    if (!req.session.user) return res.redirect('/');
+
+    try {
+        const donorId = req.params.id;
+
+        // 1. 获取商家信息 (只为了显示名字)
+        const donor = await User.findById(donorId);
+
+        // 2. 获取该商家所有 已评分 (rating > 0) 的食物记录
+        // 注意：这里不需要 populate('reservedBy')，因为我们要匿名
+        const reviews = await Food.find({ 
+            donor: donorId, 
+            rating: { $gt: 0 } // 只找大于0分的（也就是已评价的）
+        }).sort({ _id: -1 }); // 最新的评价排前面
+
+        // 3. 渲染新页面
+        res.render('reviews', { 
+            user: req.session.user, // 为了 header 显示
+            donor: donor, 
+            reviews: reviews 
+        });
+
+    } catch (err) {
+        console.log(err);
+        res.redirect('/dashboard');
+    }
+});
+
 // Start the server
 app.listen(3000, () => {
     console.log('Server running at http://localhost:3000');

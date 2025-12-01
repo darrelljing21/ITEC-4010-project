@@ -7,7 +7,7 @@
         'Fruits': 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=400&q=80',
         'Bakery': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80',
         'Meals': 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80',
-        'Drinks': 'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=400&q=80',
+        'Drinks': 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=400&q=80',
         'Other': 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=400&q=80'
     };
 %>
@@ -304,10 +304,17 @@
     </div>
 
     <h4 class="mb-3">Available Food Nearby</h4>
+    
+    <% if (foods.length === 0) { %>
+        <div class="alert alert-warning text-center">
+            No food matches your search right now. <a href="/dashboard" class="alert-link">Show All</a>
+        </div>
+    <% } %>
+
     <div class="row">
         <% foods.forEach(food => { %>
-            <div class="col-md-4">
-                <div class="card mb-4 shadow-sm h-100">
+            <div class="col-md-4 col-sm-6 mb-4">
+                <div class="card h-100 shadow-sm border-0">
                     
                     <% 
                         let displayImage = categoryImages[food.category || 'Other']; 
@@ -315,24 +322,46 @@
                             displayImage = food.imageUrl; 
                         }
                     %>
-                    <img src="<%= displayImage %>" class="card-img-top" alt="Food" style="height: 160px; object-fit: cover;">
+                    <img src="<%= displayImage %>" class="card-img-top" alt="Food" style="height: 180px; object-fit: cover;">
                     
                     <div class="card-body d-flex flex-column">
-                        <div class="d-flex justify-content-between">
-                            <h5 class="card-title"><%= food.name %></h5>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="card-title mb-0 text-truncate" style="max-width: 70%;" title="<%= food.name %>">
+                                <%= food.name %>
+                            </h5>
                             <span class="badge bg-info text-dark">Stock: <%= food.quantity %></span>
                         </div>
-                        <span class="badge bg-secondary mb-2 align-self-start"><%= food.category || 'Other' %></span>
-                        <p class="card-text flex-grow-1 small text-muted"><%= food.description %></p>
-                        <small class="mb-2">📅 Expires: <%= food.expiryDate %></small>
+
+                        <p class="text-muted small mb-2">
+                            <i class="bi bi-person"></i> From: 
+                            <% if (food.donor) { %>
+                                <a href="/donor-reviews/<%= food.donor._id %>" class="text-decoration-none fw-bold text-primary">
+                                    <%= food.donor.name %> 🔗
+                                </a>
+                            <% } else { %>
+                                Unknown
+                            <% } %>
+                        </p>
+
+                        <div class="mb-2">
+                            <span class="badge bg-secondary"><%= food.category || 'Other' %></span>
+                        </div>
+                        <p class="card-text text-muted small flex-grow-1">
+                            <%= food.description || 'No description provided.' %>
+                        </p>
+                        
+                        <div class="text-muted small mb-3">
+                            📅 Expires: <strong><%= food.expiryDate %></strong>
+                        </div>
 
                         <form action="/reserve/<%= food._id %>" method="POST" class="mt-auto">
                             <div class="input-group">
-                                <span class="input-group-text">Qty</span>
-                                <input type="number" name="reserveQty" class="form-control" value="1" min="1" max="<%= food.quantity %>" required>
-                                <button class="btn btn-primary">Reserve</button>
+                                <span class="input-group-text bg-light">Qty</span>
+                                <input type="number" name="reserveQty" class="form-control text-center" value="1" min="1" max="<%= food.quantity %>" required>
+                                <button class="btn btn-primary px-4">Reserve</button>
                             </div>
                         </form>
+
                     </div>
                 </div>
             </div>
