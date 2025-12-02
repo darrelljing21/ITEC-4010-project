@@ -36,7 +36,7 @@ mongoose.connect(dbURI)
 
 //Home Page - Login Page
 app.get('/', (req, res) => {
-    res.render('login');
+    res.render('login',{error:null});
 });
 
 // login logical
@@ -48,7 +48,7 @@ app.post('/login', async (req, res) => {
         req.session.user = user; // Save the login status
         res.redirect('/dashboard');
     } else {
-        res.send('Invalid login details. <a href="/">Try again</a>');
+        res.render('login', { error: 'Invalid email or password. Please try again.' });
     }
 });
 
